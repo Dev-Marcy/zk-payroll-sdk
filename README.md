@@ -278,6 +278,47 @@ const batchSummary = evaluateBatchRecipientLockStatus(
 console.log(`Checked ${batchSummary.totalChecked} recipients: ${batchSummary.lockedCount} locked.`);
 ```
 
+## Payroll Draft Lock Inspection Helper
+
+Inspect payroll draft lock readiness and operational lock state before submission or settlement (`#537`). Evaluates whether a draft can be safely locked, whether it is already locked or expired, whether any recipients are locked by in-flight active payroll executions, and whether draft checksums and authorizer requirements are met.
+
+- **Privacy Guaranteed**: Salary amounts and employee compensation figures are never exposed in blocker messages, warnings, or summaries. Recipient addresses and draft labels are automatically masked (`GA2C...6E67`, `Eng...oll`).
+- **Comprehensive Blocker Detection**: Validates empty drafts, duplicate recipients, expired locks, authorizer permissions, checksum integrity, and cross-checks in-flight active executions for recipient locks.
+- **Fluent & Service Integration**: Available via `inspectDraftLock()`, `assertDraftLockable()`, `draftBuilder.inspectLock()`, or `PayrollService#inspectDraftLock()`.
+
+```typescript
+import {
+  DraftBuilder,
+  inspectDraftLock,
+  assertDraftLockable,
+  formatDraftLockInspectionSummary,
+} from "@zk-payroll/core";
+
+// 1. Build and inspect a draft before locking
+const builder = new DraftBuilder(undefined, "March Payroll")
+  .add({ recipientId: "GA2C5RFPE6GCKMY3Z4DC6NOURMDRYZ3UMDVQ4N5ACFBPQ4E3Y3376E67", amount: "1000", asset: "native" })
+  .add({ recipientId: "GBBDU6DDT5I7VO6JCT262L7X3T32NZZ6XUMG575U5K7F5T27YJ3W7WHF", amount: "2500", asset: "native" });
+
+const inspection = builder.inspectLock({
+  activeExecutions: inFlightRuns,
+  authorizer: "GADMIN...",
+  allowedAuthorizers: ["GADMIN..."],
+});
+
+console.log(inspection.summary);
+// e.g. "Draft (Mar...oll): ✅ LOCK READY | 2 entries | 2 recipients | assets: native"
+
+if (!inspection.canLock) {
+  // Actionable, privacy-safe blockers
+  for (const blocker of inspection.blockers) {
+    console.error(`[${blocker.code}] ${blocker.message}`);
+  }
+} else {
+  // Safe to lock and submit
+  builder.assertLockable();
+}
+```
+
 ## Event Stream Deduplication
 
 The SDK provides deduplication helpers to prevent processing the same payroll event more than once. This strengthens payroll workflows while keeping private salary and employee data protected.
