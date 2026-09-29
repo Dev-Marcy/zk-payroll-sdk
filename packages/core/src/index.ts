@@ -141,6 +141,9 @@ export * from "./proofs/types";
 export * from "./proofs/verifierAdapter";
 export { ProofVerificationClient, verifyProofWithAdapter } from "./client";
 
+// ── Proof Artifact Lifecycle ────────────────────────────────────────────────
+export * from "./artifacts";
+
 // ── Typed Contract Clients ───────────────────────────────────────────────────
 export * from "./clients";
 
@@ -227,8 +230,5 @@ export * from "./compliance";
 // ── Privacy & Safe Credential Handling ─────────────────────────────────────
 export * from "./privacy";
 
-// ── Proof Artifact Lifecycle ────────────────────────────────────────────────
-export * from "./artifacts";
-
-// ── Payroll Calendar & Overlap Detection ────────────────────────────────────
-export * from "./payroll/calendarOverlap";
+// ── Payout Schedules & Collision Detection ──────────────────────────────────
+export * from "./schedules";
